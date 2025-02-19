@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header class="hero">
+        <h2>Shop Eco-Friendly Products</h2>
+        <p>Save the planet with sustainable choices!</p>
+    </header>
+
+    <section id="products" class="container py-5">
+        <div class="container">
+            <div class="row">
+                {% for product in products_data %}
+                <div class="col-lg-4 col-md- col-sm-6 col-12 mb-3">
+                    <div class="card" style="width: 18rem;">
+                        <img class="card-img-top" src="{{ product.img_url }}" alt="Product image">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.sustainable_alternative }}</h5>
+                            <p class="card-brand"><strong>Brand:</strong> {{ product.brand }}</p>
+                            <p class="card-cost"><strong>Cost:</strong> ₹{{ product.cost }}</p>
+                            <p class="card-rating"><strong>Rating:</strong> ⭐{{ product.rating }}</p>
+                            <a href="#" class="btn btn-primary m-2 mb-0 mt-0">View Details</a><a href="#" class="btn btn-warning" >Add to Cart</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
