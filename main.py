@@ -12,10 +12,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
 from flask import request
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = 'uoweb eobqwoir nqeorin oerws'
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///new.db"
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL").replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 class Base(DeclarativeBase):
@@ -26,7 +28,6 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
-
 #################################
 #          TABLES
 #################################
@@ -160,33 +161,6 @@ class RegisterForm(FlaskForm):
         Regexp(r'^(?=.*[A-Z]).+$', message="Password must contain at least one uppercase letter.")
     ])
     submit = SubmitField("Sign Up")
-
-#################################
-#          ROUGH
-#################################
-# this is use to add data into DB from csv file
-# import pandas as pd
-# df = pd.read_csv("eco_friendly_products_updated.csv")
-#
-# with app.app_context():
-#     for _, row in df.iterrows():  # Loop over each row
-#         product = EcoFriendlyProduct(
-#             traditional_product=row["Traditional Product"],
-#             sustainable_alternative=row["Sustainable Alternative"],
-#             material=row["Material"],
-#             brand=row["Brand"],
-#             eco_certifications=row["Eco-Certifications"],
-#             description=row["Description"],
-#             old_price=float(row["Old Price"]),
-#             current_price=float(row["Current Price"]),
-#             is_discounted=row["Is Discounted"],
-#             rating=float(row["Rating"]),
-#             img_url=row["img_url"]
-#         )
-#         db.session.add(product)
-#     db.session.commit()
-
-
 
 #################################
 #          ROUTES
@@ -436,4 +410,4 @@ def submit_review(product_id):
     return redirect(url_for('view_product', product_id=product_id))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
