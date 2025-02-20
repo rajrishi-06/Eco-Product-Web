@@ -1,84 +1,7 @@
 {% extends "base.html" %}
 {% block head %}
+		<link rel="stylesheet" href="../static/css/home.css">
     <style>
-         /* Product Section */
-#products {
-    text-align: center;
-    padding: 50px 0;
-    background-color: #f8f9fa;
-}
-
-.card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-}
-
-.card:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.card img {
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    height: 200px;
-    object-fit: cover;
-}
-
-.card-body {
-    background: white;
-    padding: 20px;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-.card-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #2e7d32;
-    margin-bottom: 10px;
-}
-
-.card-brand, .card-cost, .card-rating {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.card .btn {
-    width: 48%;
-    padding: 8px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 5px;
-    transition: background 0.3s ease;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    border: none;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-
-.btn-warning {
-    background-color: #ffc107;
-    border: none;
-}
-
-.btn-warning:hover {
-    background-color: #e0a800;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .card {
-        width: 100%;
-    }
-}
 
     </style>
 {% endblock %}
@@ -87,30 +10,71 @@
     <header class="hero">
         <h2>Shop Eco-Friendly Products</h2>
         <p>Save the planet with sustainable choices!</p>
-    </header>
-    
+				<!-- Search goes here  -->
+				<!-- Add this inside the header section before products list -->
+				<form method="GET" action="{{ url_for('home') }}" class="search-bar">
+						<input type="text" name="search" placeholder="Search for a product..." value="{{ search_query or '' }}">
+						<button type="submit"><i class="fas fa-search fa-lg"></i></button>
+				</form>
 
-    <section id="products" class="container py-5">
+    </header>
+    <section class="section-products">
         <div class="container">
             <div class="row">
-                {% for product in products_data %}
-                <div class="col-lg-4 col-md- col-sm-6 col-12 mb-3">
-                    <!-- <div class="col-lg-3 col-md-6 col-sm-12"> -->
-
-                    <div class="card" style="width: 18rem;">
-                        <img class="card-img-top" src="{{ product.img_url }}" alt="Product image">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ product.sustainable_alternative }}</h5>
-                            <p class="card-brand"><strong>Brand:</strong> {{ product.brand }}</p>
-                            <p class="card-cost"><strong>Cost:</strong> ₹{{ product.cost }}</p>
-                            <p class="card-rating"><strong>Rating:</strong> ⭐{{ product.rating }}</p>
-                            <a href="#" class="btn btn-primary m-2 mb-0 mt-0">View Details</a><a href="#" class="btn btn-warning" >Add to Cart</a>
+                {% if products_data %}
+                    {% for product in products_data %}
+                        <div class="col-md-6 col-lg-4 col-xl-3">
+                            <div id="product-{{ product.id }}" class="single-product">
+                                <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+                                    {% if product.is_discounted %}
+                                        <span class="discount">{{ (product.current_price - product.old_price) // 100 }}%</span>
+                                    {% else %}
+                                        <span class="new">new</span>
+                                    {% endif %}
+                                    <ul>
+                                        <li><a href="{{ url_for('cart_addition', product_id=product.id )}}"><i class="fas fa-shopping-cart"></i></a></li>
+                                        <li><a href="{{ url_for('wishlist_addition', product_id=product.id )}}"><i class="fas fa-heart"></i></a></li>
+                                        <li><a href="#"><i class="fas fa-plus"></i></a></li>
+                                        <li><a href="#"><i class="fas fa-expand"></i></a></li>
+                                    </ul>
+                                </div>
+                                <div class="part-2">
+                                    <h3 class="product-title text-start">{{ product.sustainable_alternative }}</h3>
+                                    <h3 class="product-title text-start">{{ product.brand }}</h3>
+                                    {% if product.old_price > product.current_price %}
+                                        <h4 class="product-old-price">₹{{ product.old_price }}</h4>
+                                    {% endif %}
+                                    <h4 class="product-price">₹{{ product.current_price }}</h4>
+                                    <p class="card-rating"><strong>Rating:</strong> ⭐{{ product.rating }}</p>
+                                </div>
+                            </div>
                         </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center">
+                        <h3>No results found</h3>
+                        <p>Try searching for another product.</p>
                     </div>
-                </div>
-                {% endfor %}
+                {% endif %}
+            </div>
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                    <a href="{{ url_for('home', page=pagination.prev_num, search=search_query if search_query else None) }}" class="prev">Previous</a>
+                {% endif %}
+
+                <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+                {% if pagination.has_next %}
+                    <a href="{{ url_for('home', page=pagination.next_num, search=search_query if search_query else None) }}" class="next">Next</a>
+                {% endif %}
             </div>
         </div>
     </section>
+
+
     
+{% endblock %}
+{% block scripts %}
+
 {% endblock %}

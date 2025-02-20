@@ -1,3 +1,6 @@
+import random
+from builtins import float
+
 from flask import Flask, request, render_template, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, joinedload, QueryableAttribute, relationship
@@ -38,13 +41,15 @@ class EcoFriendlyProduct(db.Model):
     brand: Mapped[str] = mapped_column(String(255), nullable=True)
     eco_certifications: Mapped[str] = mapped_column(String(255), nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    cost: Mapped[float] = mapped_column(Float, nullable=True)  # e.g., product cost in USD
+    current_price: Mapped[float] = mapped_column(Float, nullable=True)  # Renamed from cost
+    old_price: Mapped[float] = mapped_column(Float, nullable=True)  # New column for old price
+    is_discounted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # New boolean column
     rating: Mapped[float] = mapped_column(Float, nullable=True)  # e.g., average rating (scale of 1-5)
     img_url: Mapped[str] = mapped_column(String(255), nullable=True)
 
     # Relationship: One eco-friendly product can be in many cart items.
     cart_items: Mapped[list["Cart"]] = relationship("Cart", back_populates="product", cascade="all, delete-orphan")
-
+    wish_items: Mapped[list["WishList"]] = relationship("WishList", back_populates="product", cascade="all, delete-orphan")
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
@@ -54,13 +59,14 @@ class User(db.Model, UserMixin):
     password: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(1000), unique=True)
 
-    # Relationship: One user can have many items in their cart.
+    # Relationship: One user can have many items in their cart and wishlist.
     cart_items: Mapped[list["Cart"]] = relationship("Cart", back_populates="user", cascade="all, delete-orphan")
+    wish_items: Mapped[list["WishList"]] = relationship("WishList", back_populates="user", cascade="all, delete-orphan")
+
     def __init__(self, name, email, password):
         self.name = name
         self.email = email
         self.password = password
-
 
 class Cart(db.Model):
     __tablename__ = "cart"
@@ -68,11 +74,22 @@ class Cart(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     product_id: Mapped[int] = mapped_column(Integer, ForeignKey("eco_friendly_products.id"), nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)  # New column for quantity
 
     # Relationships back to User and EcoFriendlyProduct
     user: Mapped["User"] = relationship("User", back_populates="cart_items")
     product: Mapped["EcoFriendlyProduct"] = relationship("EcoFriendlyProduct", back_populates="cart_items")
 
+class WishList(db.Model):
+    __tablename__ = "wish"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id: Mapped[int] = mapped_column(Integer, ForeignKey("eco_friendly_products.id"), nullable=False)
+
+    # Relationships back to User and EcoFriendlyProduct
+    user: Mapped["User"] = relationship("User", back_populates="wish_items")
+    product: Mapped["EcoFriendlyProduct"] = relationship("EcoFriendlyProduct", back_populates="wish_items")
 
 with app.app_context():
     db.create_all()
@@ -99,6 +116,10 @@ def get_products_data():
     data = db.session.execute(db.select(EcoFriendlyProduct)).scalars().all()
     return data
 
+# Register the filter correctly
+@app.template_filter('random_number')
+def random_number_filter(start, end):
+    return random.randint(start, end)
 #################################
 #          FORMS
 #################################
@@ -125,11 +146,11 @@ class RegisterForm(FlaskForm):
     submit = SubmitField("Sign Up")
 
 #################################
-#          SCRAPE
+#          ROUGH
 #################################
 # this is use to add data into DB from csv file
 # import pandas as pd
-# df = pd.read_csv("eco_friendly_products_inr.csv")
+# df = pd.read_csv("eco_friendly_products_updated.csv")
 #
 # with app.app_context():
 #     for _, row in df.iterrows():  # Loop over each row
@@ -140,12 +161,14 @@ class RegisterForm(FlaskForm):
 #             brand=row["Brand"],
 #             eco_certifications=row["Eco-Certifications"],
 #             description=row["Description"],
-#             cost=float(row["Cost"]),  # Ensure it's a float
-#             rating=float(row["Rating"]),  # Ensure it's a float
-#             img_url=row["img_url"]  # Assign proper column value
+#             old_price=float(row["Old Price"]),
+#             current_price=float(row["Current Price"]),
+#             is_discounted=row["Is Discounted"],
+#             rating=float(row["Rating"]),
+#             img_url=row["img_url"]
 #         )
 #         db.session.add(product)
-#     db.session.commit()  # Commit all changes after loop
+#     db.session.commit()
 
 
 
@@ -188,9 +211,112 @@ def register():
         return redirect(url_for('home'))
     return render_template("register.html", form=form)
 
-@app.route('/')
+@app.route('/add_to_cart/<int:product_id>')
+@login_required
+def cart_addition(product_id):
+    product = db.session.execute(
+        db.select(EcoFriendlyProduct).where(EcoFriendlyProduct.id == product_id)
+    ).scalar_one_or_none()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect(url_for('home'))
+
+    existing_cart_item = db.session.execute(
+        db.select(Cart).where(
+            (Cart.user_id == current_user.id) & (Cart.product_id == product_id)
+        )
+    ).scalar_one_or_none()
+
+    if existing_cart_item:
+        existing_cart_item.quantity += 1  # Increment quantity
+        flash("Increased item quantity in cart!", "info")
+    else:
+        cart_item = Cart(user_id=current_user.id, product_id=product_id, quantity=1)
+        db.session.add(cart_item)
+        flash("Item added to cart!", "success")
+
+    db.session.commit()
+    return redirect(url_for('home'))
+
+@app.route("/wishlist_add/<int:product_id>")
+@login_required
+def wishlist_addition(product_id):
+    product = db.session.execute(
+        db.select(EcoFriendlyProduct).where(EcoFriendlyProduct.id == product_id)
+    ).scalar_one_or_none()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect(url_for('home'))
+
+    existing_wishlist_item = db.session.execute(
+        db.select(WishList).where(
+            (WishList.user_id == current_user.id) & (WishList.product_id == product_id)
+        )
+    ).scalar_one_or_none()
+
+    if existing_wishlist_item:
+        return False
+    else:
+        wishlist_item = WishList(user_id=current_user.id, product_id=product_id)
+        db.session.add(wishlist_item)
+        db.session.commit()
+    return redirect(url_for('home'))
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
+@app.route('/cart')
+@login_required
+def view_cart():
+    cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
+    cart_items = current_user.cart_items
+    return render_template("cart.html", cart_items=cart_items, cart_count=cart_count)
+
+@app.route('/wishlist')
+@login_required
+def view_wishlist():
+    cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
+    wishlist_items = current_user.wish_items
+    return render_template("wishlist.html", wishlist_items=wishlist_items, cart_count=cart_count)
+
+
+from flask import request
+from sqlalchemy.orm import aliased
+
+
+@app.route('/', methods=['GET'])
 def home():
-    return render_template('home.html' ,products_data=get_products_data())
+    search_query = request.args.get('search', '').strip()  # Get search query
+    page = request.args.get('page', 1, type=int)  # Get page number from URL, default to 1
+    per_page = 12  # Number of products per page
+
+    query = db.select(EcoFriendlyProduct)
+
+    # Filter based on search query if provided
+    if search_query:
+        query = query.filter(EcoFriendlyProduct.traditional_product.ilike(f"%{search_query}%"))
+
+    # Paginate results
+    paginated_products = db.paginate(query, page=page, per_page=per_page, error_out=False)
+
+    cart_count = 0  # Default value for non-logged-in users
+    if current_user.is_authenticated:
+        cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
+
+    return render_template(
+        'home.html',
+        products_data=paginated_products.items,
+        cart_count=cart_count,
+        search_query=search_query,
+        pagination=paginated_products
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -91,7 +91,7 @@
 
                 {{ form.submit(class="btn btn-dark mb-3 mt-3 login-btn") }}
             </form>
-            <p>Don't have an account? <a href="#">Sign up</a></p>
+            <p>Don't have an account? <a href="{{ url_for('register') }}">Sign up</a></p>
         </div>
     </section>
 {% endblock %}

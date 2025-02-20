@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block head %}
+		<link rel="stylesheet" href="../static/css/home.css">
+    <style>
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <header class="hero">
+        <h2>Shop Eco-Friendly Products</h2>
+        <p>Save the planet with sustainable choices!</p>
+    </header>
+
+    <section class="section-products">
+		<div class="container">
+				<div class="row">
+						{% for wishlist_item in wishlist_items %}
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <div id="product-{{ wishlist_item.product.id }}" class="single-product">
+                        <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+                            {% if wishlist_item.product.is_discounted %}
+                                <span class="discount">{{ (wishlist_item.product.current_price - wishlist_item.product.old_price) // 100  }}%</span>
+                            {% else %}
+                                <span class="new">new</span>
+                            {% endif %}
+                            <ul>
+                                <li><a href="{{ url_for('cart_addition', product_id=wishlist_item.product.id )}}"><i class="fas fa-shopping-cart"></i></a></li>
+                                <li><a href="#"><i class="fas fa-heart"></i></a></li>
+                                <li><a href="#"><i class="fas fa-plus"></i></a></li>
+                                <li><a href="#"><i class="fas fa-expand"></i></a></li>
+                            </ul>
+                        </div>
+                        <div class="part-2">
+
+                              <h3 class="product-title text-start">{{ wishlist_item.product.sustainable_alternative }} </h3>
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span class="product-title text-start">{{ wishlist_item.product.brand }}</span>
+                            </div>
+                          {% if wishlist_item.product.old_price > wishlist_item.product.current_price %}
+                            <h4 class="product-old-price">₹{{ wishlist_item.product.old_price }}</h4>
+                          {% endif %}
+                            <h4 class="product-price">₹{{ wishlist_item.product.current_price }}</h4>
+                            <p class="card-rating"><strong>Rating:</strong> ⭐{{ wishlist_item.product.rating }}</p>
+                            <p></p> <!-- Display quantity -->
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+				</div>
+		</div>
+</section>
+    
+{% endblock %}
+{% block scripts %}
+
+{% endblock %}

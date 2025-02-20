@@ -4,42 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EcoShop - Home{% endblock %}</title>
-    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="../static/css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     {% block head %}
     {% endblock %}
+<!-- Add Bootstrap CSS -->
+<style>
+    .nav-link .fa-shopping-cart {
+        font-size: 1.5rem;
+    }
+    #cart-count {
+        font-size: 0.75rem;
+        padding: 0.4em 0.6em;
+    }
+</style>
 </head>
 <body>
 <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="{{ url_for('home') }}">
             EcoShop <i class="fas fa-leaf"></i>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+
+        <!-- Cart Icon (Always Visible) -->
+        <div class="d-flex align-items-center">
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{url_for('view_wishlist')}}">
+                <i class="fas fa-heart fa-lg text-white"></i>
+            </a>
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{url_for('view_cart')}}">
+                <i class="fas fa-shopping-cart fa-lg text-white"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ cart_count }}
+                </span>
+            </a>
+
+            <!-- Navbar Toggler -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="index.html">
+                    <a class="nav-link" href="{{ url_for('home') }}">
                         <i class="fas fa-home"></i> Home
                     </a>
                 </li>
+                {% if not current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="login.html">
+                    <a class="nav-link" href="{{ url_for('login') }}">
                         <i class="fas fa-user"></i> Login
                     </a>
                 </li>
+                {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="cart.html">
-                        <i class="fas fa-shopping-cart"></i> <span id="cart-count" class="badge bg-light text-dark">0</span>
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-user"></i> Logout
+                    </a>
+                </li>
+                {% endif %}
+                <!-- Cart Icon and wishlist (Visible on Large Screens) -->
+                <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link position-relative" href="{{ url_for('view_wishlist') }}">
+                        <i class="fas fa-heart fa-lg"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link position-relative" href="{{ url_for('view_cart') }}">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
+                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ cart_count }}
+                        </span>
                     </a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
+
+
 <!------------------------------>
     <!-- Main Content -->
     {% block content %}

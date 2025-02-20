@@ -24,3 +24,8 @@ body {
     padding: 50px;
     background: #f4f4f4;
 }
+/* Button (toggler) styles */
+.navbar-toggler.collapsed:focus {
+    outline: none; /* Remove focus outline */
+    box-shadow: none; /* Remove the glow effect */
+}
