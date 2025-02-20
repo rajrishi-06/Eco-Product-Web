@@ -24,7 +24,7 @@
 </head>
 <body>
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+<nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="{{ url_for('home') }}">
             EcoShop <i class="fas fa-leaf"></i>
@@ -87,8 +87,6 @@
         </div>
     </div>
 </nav>
-
-
 <!------------------------------>
     <!-- Main Content -->
     {% block content %}

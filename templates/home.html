@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block head %}
 <link rel="stylesheet" href="../static/css/home.css">
+<script>
+  window.onload = function() {
+    console.log("hello its working")
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% for category, message in messages %}
+        {% if category == "super_danger" %}
+          alert("{{ message }}")
+        {% endif %}
+      {% endfor %}
+    {% endwith %}
+  };
+</script>
 {% endblock %}
 
 {% block content %}
@@ -92,4 +104,5 @@
         window.location.href = `/add_to_cart/${productId}?quantity=` + quantity;
     }
 </script>
+
 {% endblock %}

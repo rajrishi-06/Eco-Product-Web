@@ -18,7 +18,7 @@
 						{% for wishlist_item in wishlist_items %}
                 <div class="col-md-6 col-lg-4 col-xl-3">
                     <div id="product-{{ wishlist_item.product.id }}" class="single-product">
-                        <div class="part-1" style="background: url(''{{ wishlist_item.product.img_url }}') no-repeat center !important; background-size: cover !important;">
+                        <div class="part-1" style="background: url('{{ wishlist_item.product.img_url }}') no-repeat center !important; background-size: cover !important;">
                             {% if wishlist_item.product.is_discounted %}
                                 <span class="discount">{{ (wishlist_item.product.current_price - wishlist_item.product.old_price) // 100  }}%</span>
                             {% else %}
