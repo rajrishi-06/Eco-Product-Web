@@ -20,10 +20,10 @@
       {% if products_data %}
       {% for product in products_data %}
       <div class="col-md-6 col-lg-4 col-xl-3">
-        <div id="product-{{ product.id }}" class="single-product">
-          <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+        <div id="product-1" class="single-product">
+          <div class="part-1" style="background: url('{{ product.img_url }}') no-repeat center; background-size: cover !important;">
             {% if product.is_discounted %}
-            <span class="discount">{{ (product.current_price - product.old_price) // 100 }}%</span>
+            <span class="discount">{{ ((product.old_price - product.current_price) / product.old_price * 100) | round }}%</span>
             {% else %}
             <span class="new">new</span>
             {% endif %}

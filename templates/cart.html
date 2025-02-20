@@ -21,7 +21,7 @@
                 {% for cart_item in cart_items %}
                     <div class="col-md-6 col-lg-4 col-xl-3">
                         <div id="product-{{ cart_item.product.id }}" class="single-product">
-                            <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+                            <div class="part-1" style="background: url('{{ cart_item.product.img_url }}') no-repeat center !important; background-size: cover !important;">
                                 {% if cart_item.product.is_discounted %}
                                     <span class="discount">{{ (cart_item.product.current_price - cart_item.product.old_price) // 100  }}%</span>
                                 {% else %}
@@ -58,8 +58,8 @@
                 {% endfor %}
             {% else %}
             <div class="col-12 text-center">
-                <h3>No results found</h3>
-                <p>Try searching for another product.</p>
+                <h3>No Products Added to Cart</h3>
+                <p>Try adding some products</p>
               </div>
             {% endif %}
 				</div>

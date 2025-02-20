@@ -116,7 +116,7 @@
     <div class="row">
         <!-- Left: Product Image (40%) -->
         <div class="product-image">
-            <img src="../static/images/img.jpg" alt="Product Image" class="img-fluid">
+            <img src="{{ product.img_url }}" alt="Product Image" class="img-fluid">
         </div>
 
         <!-- Middle: Product Details + Description (40%) -->
@@ -124,9 +124,9 @@
             <h2 class="product-title-unrel">{{ product.sustainable_alternative }}</h2>
             <h4 class="product-brand-unrel">by {{ product.brand }}</h4>
 
-            <p class="card-rating-unrel">
-                <strong>Rating:</strong> ⭐{{ product.rating }} ({{ product.reviews }} reviews)
-            </p>
+            <a class="card-rating-unrel" href="#reviews" style="color:#ff9900 !important;">
+                <strong>Rating:</strong> ⭐{{ product.rating }} (reviews)
+            </a>
 
             {% if product.is_discounted %}
                 <h4 class="product-price-unrelated">
@@ -175,7 +175,7 @@
                     {% for product in products_data %}
                         <div class="col-md-6 col-lg-4 col-xl-3">
                             <div id="product-{{ product.id }}" class="single-product">
-                                <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+                                <div class="part-1" style="background: url('{{ product.img_url }}') no-repeat center !important; background-size: cover !important;">
                                     {% if product.is_discounted %}
                                         <span class="discount">{{ (product.current_price - product.old_price) // 100 }}%</span>
                                     {% else %}
@@ -221,6 +221,64 @@
             </div>
         </div>
     </section>
+    </section>
+
+<!-- Review Section -->
+<section class="section-reviews" id="reviews">
+    <h1 class="mx-5 my-3">Customer Reviews</h1>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                {% if product.reviews %}
+                    {% for review in product.reviews %}
+                        <div class="card my-3 p-3 col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ review.user.name }}</h5>
+                                <p class="card-rating"><strong>Rating:</strong> ⭐{{ review.rating }}</p>
+                                <p class="card-text">{{ review.review_text }}</p>
+                                <p class="text-muted">Reviewed on {{ review.created_at.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center">
+                        <h3>No reviews yet</h3>
+                        <p>Be the first to review this product!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Review Submission Form -->
+        {% if current_user.is_authenticated %}
+            <div class="row mt-4 ">
+                <h3 class="mx-5">Leave a Review</h3>
+                <div class="col-12">
+
+                    <form method="POST" action="{{ url_for('submit_review', product_id=product.id) }}" class="mx-5">
+                        <div class="mb-3 col-md-3">
+                            <label for="rating" class="form-label">Rating</label>
+                            <select id="rating" name="rating" class="form-select" required>
+                                <option value="5">⭐ 5</option>
+                                <option value="4">⭐ 4</option>
+                                <option value="3">⭐ 3</option>
+                                <option value="2">⭐ 2</option>
+                                <option value="1">⭐ 1</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label for="review_text" class="form-label">Review</label>
+                            <textarea id="review_text" name="review_text" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mb-5 ">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center mt-3"><a href="{{ url_for('login') }} "><u>Log in</u></a> to leave a review.</p>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}
 
 {% block scripts %}

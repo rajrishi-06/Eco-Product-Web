@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from flask import Flask, render_template, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float
+from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float, DateTime
 from flask_wtf import FlaskForm
 from werkzeug.utils import redirect
 from wtforms import StringField, SubmitField, PasswordField, EmailField
@@ -28,6 +30,20 @@ login_manager.init_app(app)
 #################################
 #          TABLES
 #################################
+class Review(db.Model):
+    __tablename__ = "reviews"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id: Mapped[int] = mapped_column(Integer, ForeignKey("eco_friendly_products.id"), nullable=False)
+    rating: Mapped[float] = mapped_column(Float, nullable=False)  # Rating between 1-5
+    review_text: Mapped[str] = mapped_column(Text, nullable=True)  # Optional review text
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Auto timestamp
+
+    # Relationships back to User and EcoFriendlyProduct
+    user: Mapped["User"] = relationship("User", back_populates="reviews")
+    product: Mapped["EcoFriendlyProduct"] = relationship("EcoFriendlyProduct", back_populates="reviews")
+
 class EcoFriendlyProduct(db.Model):
     __tablename__ = 'eco_friendly_products'
 
@@ -38,15 +54,16 @@ class EcoFriendlyProduct(db.Model):
     brand: Mapped[str] = mapped_column(String(255), nullable=True)
     eco_certifications: Mapped[str] = mapped_column(String(255), nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    current_price: Mapped[float] = mapped_column(Float, nullable=True)  # Renamed from cost
-    old_price: Mapped[float] = mapped_column(Float, nullable=True)  # New column for old price
-    is_discounted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # New boolean column
-    rating: Mapped[float] = mapped_column(Float, nullable=True)  # e.g., average rating (scale of 1-5)
+    current_price: Mapped[float] = mapped_column(Float, nullable=True)
+    old_price: Mapped[float] = mapped_column(Float, nullable=True)
+    is_discounted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    rating: Mapped[float] = mapped_column(Float, nullable=True)  # Overall rating (calculated avg)
     img_url: Mapped[str] = mapped_column(String(255), nullable=True)
 
-    # Relationship: One eco-friendly product can be in many cart items.
+    # Relationships
     cart_items: Mapped[list["Cart"]] = relationship("Cart", back_populates="product", cascade="all, delete-orphan")
     wish_items: Mapped[list["WishList"]] = relationship("WishList", back_populates="product", cascade="all, delete-orphan")
+    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="product", cascade="all, delete-orphan")  # New
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
@@ -56,9 +73,10 @@ class User(db.Model, UserMixin):
     password: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(1000), unique=True)
 
-    # Relationship: One user can have many items in their cart and wishlist.
+    # Relationships
     cart_items: Mapped[list["Cart"]] = relationship("Cart", back_populates="user", cascade="all, delete-orphan")
     wish_items: Mapped[list["WishList"]] = relationship("WishList", back_populates="user", cascade="all, delete-orphan")
+    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="user", cascade="all, delete-orphan")  # New
 
     def __init__(self, name, email, password):
         self.name = name
@@ -177,6 +195,8 @@ class RegisterForm(FlaskForm):
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = LoginForm()
     if request.method == "POST" and form.validate_on_submit():
         user = db.session.execute(db.select(User).where(User.email == form.email.data.lower())).scalar_one_or_none()
@@ -190,6 +210,8 @@ def login():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = RegisterForm()
     if request.method == "POST" and form.validate_on_submit():
         user_email = form.email.data.strip().lower()
@@ -362,7 +384,6 @@ def view_product(product_id):
         cart_count=get_cart_count(),
     )
 
-
 @app.route('/', methods=['GET'])
 def home():
     search_query = request.args.get('search', '').strip()  # Get search query
@@ -371,7 +392,6 @@ def home():
 
     query = db.select(EcoFriendlyProduct)
 
-    # Filter based on search query if provided
     if search_query:
         query = query.filter(EcoFriendlyProduct.traditional_product.ilike(f"%{search_query}%"))
 
@@ -386,6 +406,34 @@ def home():
         pagination=paginated_products
     )
 
+@app.route('/submit_review/<int:product_id>', methods=['POST'])
+@login_required
+def submit_review(product_id):
+    rating = request.form.get("rating", type=float)
+    review_text = request.form.get("review_text", type=str)
+
+    if not (1 <= rating <= 5):
+        flash("Invalid rating. Please select a value between 1 and 5.", "danger")
+        return redirect(url_for('view_product', product_id=product_id))
+
+    new_review = Review(
+        user_id=current_user.id,
+        product_id=product_id,
+        rating=rating,
+        review_text=review_text
+    )
+
+    db.session.add(new_review)
+    db.session.commit()
+
+    # Optionally, update the product's average rating
+    avg_rating = db.session.query(db.func.avg(Review.rating)).filter(Review.product_id == product_id).scalar()
+    product = EcoFriendlyProduct.query.get(product_id)
+    product.rating = round(avg_rating, 1) if avg_rating else None
+    db.session.commit()
+
+    flash("Review submitted successfully!", "success")
+    return redirect(url_for('view_product', product_id=product_id))
 
 if __name__ == "__main__":
     app.run(debug=True)
