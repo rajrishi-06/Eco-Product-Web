@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired, Length, Regexp, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
+from flask import request
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = 'uoweb eobqwoir nqeorin oerws'
@@ -112,6 +113,11 @@ def get_products_data():
     data = db.session.execute(db.select(EcoFriendlyProduct)).scalars().all()
     return data
 
+def get_cart_count():
+    cart_count = 0  # Default value for non-logged-in users
+    if current_user.is_authenticated:
+        cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
+    return cart_count
 #################################
 #          FORMS
 #################################
@@ -180,7 +186,7 @@ def login():
             return redirect(url_for('home'))
         else:
             flash('Invalid Username or Email or password. Please try again.', 'danger')
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form, cart_count=get_cart_count())
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
@@ -201,9 +207,9 @@ def register():
         db.session.commit()
         login_user(new_user, remember=True)
         return redirect(url_for('home'))
-    return render_template("register.html", form=form)
+    return render_template("register.html", form=form, cart_count=get_cart_count())
 
-@app.route('/add_to_cart/<int:product_id>')
+@app.route('/add_to_cart/<int:product_id>', methods=['GET','POST'])
 @login_required
 def cart_addition(product_id):
     product = db.session.execute(
@@ -214,6 +220,15 @@ def cart_addition(product_id):
         flash("Product not found!", "danger")
         return redirect(url_for('home'))
 
+    try:
+        quantity = int(request.args.get('quantity', 1))  # Convert to integer properly
+        if quantity < 1:
+            flash("Invalid quantity!", "warning")
+            return redirect(url_for('home'))
+    except (ValueError, TypeError):
+        flash("Invalid quantity!", "danger")
+        return redirect(url_for('home'))
+
     existing_cart_item = db.session.execute(
         db.select(Cart).where(
             (Cart.user_id == current_user.id) & (Cart.product_id == product_id)
@@ -221,15 +236,49 @@ def cart_addition(product_id):
     ).scalar_one_or_none()
 
     if existing_cart_item:
-        existing_cart_item.quantity += 1  # Increment quantity
-        flash("Increased item quantity in cart!", "info")
+        existing_cart_item.quantity += quantity  # Update quantity
+        flash(f"Updated item quantity in cart! ({existing_cart_item.quantity})", "info")
     else:
-        cart_item = Cart(user_id=current_user.id, product_id=product_id, quantity=1)
+        cart_item = Cart(user_id=current_user.id, product_id=product_id, quantity=quantity)
         db.session.add(cart_item)
-        flash("Item added to cart!", "success")
+        flash(f"Added {quantity} item(s) to cart!", "success")
 
     db.session.commit()
     return redirect(url_for('home'))
+
+
+@app.route('/remove_from_cart/<int:product_id>')
+@login_required
+def cart_deletion(product_id):
+    cart_item = db.session.execute(
+        db.select(Cart).where(
+            (Cart.user_id == current_user.id) & (Cart.product_id == product_id)
+        )
+    ).scalar_one_or_none()
+
+    if not cart_item:
+        flash("Item not found in cart!", "warning")
+        return redirect(url_for('home'))
+
+    try:
+        quantity = int(request.args.get('quantity', 1))  # Get quantity from URL
+        if quantity < 1:
+            flash("Invalid quantity!", "warning")
+            return redirect(url_for('home'))
+    except ValueError:
+        flash("Invalid quantity!", "danger")
+        return redirect(url_for('home'))
+
+    if cart_item.quantity > quantity:
+        cart_item.quantity -= quantity  # Decrease quantity
+        flash(f"Removed {quantity} item(s) from cart!", "info")
+    else:
+        db.session.delete(cart_item)  # Remove item if quantity reaches zero
+        flash("Item removed from cart!", "success")
+
+    db.session.commit()
+    return redirect(url_for('home'))
+
 
 @app.route("/wishlist_add/<int:product_id>")
 @login_required
@@ -256,6 +305,21 @@ def wishlist_addition(product_id):
         db.session.commit()
     return redirect(url_for('home'))
 
+@app.route('/remove_from_wishlist/<int:product_id>')
+@login_required
+def wishlist_deletion(product_id):
+    wishlist_item = db.session.execute(
+        db.select(WishList).where(
+            (WishList.user_id == current_user.id) & (WishList.product_id == product_id)
+        )
+    ).scalar_one_or_none()
+    if not wishlist_item:
+        flash("Item not found in wishlist!", "warning")
+    else:
+        db.session.delete(wishlist_item)
+        db.session.commit()
+        flash("Item removed from wishlist!", "success")
+    return redirect(url_for('home'))
 
 @app.route('/logout')
 @login_required
@@ -266,27 +330,44 @@ def logout():
 @app.route('/cart')
 @login_required
 def view_cart():
-    cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
     cart_items = current_user.cart_items
-    return render_template("cart.html", cart_items=cart_items, cart_count=cart_count)
+    return render_template("cart.html", cart_items=cart_items, cart_count=get_cart_count())
 
 @app.route('/wishlist')
 @login_required
 def view_wishlist():
-    cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
     wishlist_items = current_user.wish_items
-    return render_template("wishlist.html", wishlist_items=wishlist_items, cart_count=cart_count)
+    return render_template("wishlist.html", wishlist_items=wishlist_items, cart_count=get_cart_count())
 
 
-from flask import request
-from sqlalchemy.orm import aliased
+@app.route('/product/<int:product_id>')
+def view_product(product_id):
+    # Fetch the main product
+    product = db.session.execute(
+        db.select(EcoFriendlyProduct).where(EcoFriendlyProduct.id == product_id)
+    ).scalar_one_or_none()
+
+    # Fetch related products (excluding the current one)
+    similar_products = db.session.execute(
+        db.select(EcoFriendlyProduct)
+        .where(EcoFriendlyProduct.id != product_id)  # Exclude current product
+        .order_by(db.func.random())  # Get random products
+        .limit(4)  # Limit to 4 similar products
+    ).scalars().all()
+
+    return render_template(
+        "product.html",
+        product=product,
+        products_data=similar_products,  # Pass similar products
+        cart_count=get_cart_count(),
+    )
 
 
 @app.route('/', methods=['GET'])
 def home():
     search_query = request.args.get('search', '').strip()  # Get search query
     page = request.args.get('page', 1, type=int)  # Get page number from URL, default to 1
-    per_page = 12  # Number of products per page
+    per_page = 16  # Number of products per page
 
     query = db.select(EcoFriendlyProduct)
 
@@ -297,14 +378,10 @@ def home():
     # Paginate results
     paginated_products = db.paginate(query, page=page, per_page=per_page, error_out=False)
 
-    cart_count = 0  # Default value for non-logged-in users
-    if current_user.is_authenticated:
-        cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
-
     return render_template(
         'home.html',
         products_data=paginated_products.items,
-        cart_count=cart_count,
+        cart_count=get_cart_count(),
         search_query=search_query,
         pagination=paginated_products
     )

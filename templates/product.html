@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Product{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/home.css">
+<style>
+    /* Layout Configuration */
+    .container {
+        max-width: 1200px; /* Set max width for better layout */
+    }
+
+    .row {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    /* Column Layout */
+    .product-image {
+        flex: 40%;
+        padding-right: 20px;
+    }
+
+    .product-details {
+        flex: 40%;
+        padding-right: 20px;
+    }
+
+    .buy-section {
+        flex: 20%;
+        background: #fafafa;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+
+    /* Product Image */
+    .product-image img {
+        width: 100%;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Text Styles */
+    .product-title-unrel {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+
+    .product-brand-unrel {
+        font-size: 1.2rem;
+        color: #6c757d;
+    }
+
+    .card-rating-unrel {
+        font-size: 1.1rem;
+        color: #ff9900;
+    }
+
+    .product-price-unrelated {
+        font-size: 1.5rem;
+
+        font-weight: bold;
+    }
+
+    .product-old-price-unrelated {
+        opacity: 0.6;
+    }
+
+    /* Discount Badge */
+    .discount-unrelated {
+        color: #ffffff;
+        background-color: #fe302f;
+        padding: 5px 8px;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        border-radius: 5px;
+    }
+
+    .new-unrelated {
+        color: #ffffff;
+        background-color: #444444;
+        padding: 5px 8px;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        border-radius: 5px;
+    }
+
+    /* Buy Section Buttons */
+    .btn-warning {
+        background: #ff9900;
+        border: none;
+    }
+
+    .btn-danger {
+        background: #b12704;
+        border: none;
+    }
+
+    /* Responsive Fix */
+    @media (max-width: 992px) {
+        .row {
+            flex-direction: column;
+        }
+        .product-image, .product-details, .buy-section {
+            flex: 100%;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container mt-5">
+    <div class="row">
+        <!-- Left: Product Image (40%) -->
+        <div class="product-image">
+            <img src="../static/images/img.jpg" alt="Product Image" class="img-fluid">
+        </div>
+
+        <!-- Middle: Product Details + Description (40%) -->
+        <div class="product-details">
+            <h2 class="product-title-unrel">{{ product.sustainable_alternative }}</h2>
+            <h4 class="product-brand-unrel">by {{ product.brand }}</h4>
+
+            <p class="card-rating-unrel">
+                <strong>Rating:</strong> ⭐{{ product.rating }} ({{ product.reviews }} reviews)
+            </p>
+
+            {% if product.is_discounted %}
+                <h4 class="product-price-unrelated">
+                    ₹{{ product.current_price }} <span class="discount-unrelated">{{ ((product.old_price - product.current_price) / product.old_price * 100) | round }}% Off</span>
+                </h4>
+            {% else %}
+                <h4 class="product-price-unrelated">₹{{ product.current_price }} <span class="new-unrelated">New</span></h4>
+            {% endif %}
+
+            {% if product.old_price > product.current_price %}
+                <h5 class="product-old-price-unrelated"><s>₹{{ product.old_price }}</s></h5>
+            {% endif %}
+
+            <ul class="product-features">
+                <li>Made with Eco-Friendly Material: {{ product.material }}</li>
+                <li>Recyclable Packaging</li>
+                <li>{{ product.eco_certifications }} Certified</li>
+            </ul>
+
+            <!-- Product Description -->
+            <h3>Product Description</h3>
+            <p>{{ product.description }}</p>
+        </div>
+
+        <!-- Right: Buy Section (20%) -->
+        <div class="buy-section">
+            <p><strong>In Stock</strong></p>
+                  <label for="quantity-{{ product.id }}"></label>
+                  <select id="quantity-{{ product.id }}" class="form-select">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                  </select>
+
+            <a class="btn btn-warning w-100 mt-3" onclick="addToCart({{ product.id }})">Add to Cart</a>
+            <button class="btn btn-danger w-100 mt-2">Buy Now</button>
+        </div>
+    </div>
+</section>
+    <section class="section-products">
+        <h1 class="mx-5 my-3">Similar Products</h1>
+        <div class="container">
+            <div class="row">
+                {% if products_data %}
+                    {% for product in products_data %}
+                        <div class="col-md-6 col-lg-4 col-xl-3">
+                            <div id="product-{{ product.id }}" class="single-product">
+                                <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+                                    {% if product.is_discounted %}
+                                        <span class="discount">{{ (product.current_price - product.old_price) // 100 }}%</span>
+                                    {% else %}
+                                        <span class="new">new</span>
+                                    {% endif %}
+                                    <ul>
+                                      <li>
+                                          <a href="#" onclick="addToCart({{ product.id }})">
+                                              <i class="fas fa-shopping-cart"></i>
+                                          </a>
+                                      </li>
+                                      <li>
+                                          <label for="quantity-{{ product.id }}"></label>
+                                          <select id="quantity-{{ product.id }}" class="form-select">
+                                              <option value="1">1</option>
+                                              <option value="2">2</option>
+                                              <option value="3">3</option>
+                                              <option value="4">4</option>
+                                          </select>
+                                      </li>
+                                      <li><a href="{{ url_for('wishlist_addition', product_id=product.id )}}"><i class="fas fa-heart"></i></a></li>
+                                      <li><a href="{{ url_for('view_product', product_id=product.id)}}"><i class="fas fa-expand"></i></a></li>
+                                  </ul>
+                                </div>
+                                <div class="part-2">
+                                    <h3 class="product-title text-start">{{ product.sustainable_alternative }}</h3>
+                                    <h3 class="product-title text-start">{{ product.brand }}</h3>
+                                    {% if product.old_price > product.current_price %}
+                                        <h4 class="product-old-price">₹{{ product.old_price }}</h4>
+                                    {% endif %}
+                                    <h4 class="product-price">₹{{ product.current_price }}</h4>
+                                    <p class="card-rating"><strong>Rating:</strong> ⭐{{ product.rating }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center">
+                        <h3>No results found</h3>
+                        <p>Similar Products are not available </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function addToCart(productId) {
+            let quantity = document.getElementById(`quantity-${productId}`).value;
+            window.location.href = `/add_to_cart/${productId}?quantity=` + quantity;
+        }
+    </script>
+{% endblock %}

@@ -2,7 +2,9 @@
 {% block head %}
 		<link rel="stylesheet" href="../static/css/home.css">
     <style>
-
+        .part1 ul li {
+            border-radius: 15px;
+        }
     </style>
 {% endblock %}
 
@@ -15,47 +17,61 @@
     <section class="section-products">
 		<div class="container">
 				<div class="row">
-						{% for cart_item in cart_items %}
-<div class="col-md-6 col-lg-4 col-xl-3">
-    <div id="product-{{ cart_item.product.id }}" class="single-product">
-        <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
-            {% if cart_item.product.is_discounted %}
-                <span class="discount">{{ (cart_item.product.current_price - cart_item.product.old_price) // 100  }}%</span>
+            {% if cart_items %}
+                {% for cart_item in cart_items %}
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div id="product-{{ cart_item.product.id }}" class="single-product">
+                            <div class="part-1" style="background: url('../static/images/img.jpg') no-repeat center !important; background-size: cover !important;">
+                                {% if cart_item.product.is_discounted %}
+                                    <span class="discount">{{ (cart_item.product.current_price - cart_item.product.old_price) // 100  }}%</span>
+                                {% else %}
+                                    <span class="new">new</span>
+                                {% endif %}
+                                <ul>
+                                    <li><a href="#" onclick="removeFromCart( {{ cart_item.product.id }})"><i class="fas fa-trash-alt"></i></a></li>
+                                     <li>
+                                          <label for="quantity-{{ cart_item.product.id }}"></label>
+                                          <select id="quantity-{{ cart_item.product.id }}" class="form-select">
+                                              {% for i in range(cart_item.quantity) %}
+                                              <option value="{{ i + 1 }}">{{ i + 1 }}</option>
+                                              {% endfor %}
+                                          </select>
+                                     </li>
+                                    <li><a href="{{ url_for('wishlist_addition', product_id=cart_item.product.id )}}"><i class="fas fa-heart"></i></a></li>
+                                    <li><a href="{{url_for('view_product', product_id=cart_item.product.id )}}"><i class="fas fa-expand"></i></a></li>
+                                </ul>
+                            </div>
+                            <div class="part-2">
+                                <h3 class="product-title text-start">{{ cart_item.product.sustainable_alternative }} </h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <span class="product-title text-start">{{ cart_item.product.brand }}</span>
+                                    <span class="product-title text-end m-3 mb-0 mt-0"><strong>Quantity:</strong> {{ cart_item.quantity }}</span>
+                                </div>
+                                {% if cart_item.product.old_price > cart_item.product.current_price %}
+                                  <h4 class="product-old-price">₹{{ cart_item.product.old_price }}</h4>
+                                {% endif %}
+                                <h4 class="product-price">₹{{ cart_item.product.current_price }}</h4>
+                                <p class="card-rating"><strong>Rating:</strong> ⭐{{ cart_item.product.rating }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
             {% else %}
-                <span class="new">new</span>
+            <div class="col-12 text-center">
+                <h3>No results found</h3>
+                <p>Try searching for another product.</p>
+              </div>
             {% endif %}
-            <ul>
-                <li><a href="{{ url_for('cart_addition', product_id=cart_item.product.id )}}"><i class="fas fa-shopping-cart"></i></a></li>
-                <li><a href="#"><i class="fas fa-heart"></i></a></li>
-                <li><a href="#"><i class="fas fa-plus"></i></a></li>
-                <li><a href="#"><i class="fas fa-expand"></i></a></li>
-            </ul>
-        </div>
-        <div class="part-2">
-
-              <h3 class="product-title text-start">{{ cart_item.product.sustainable_alternative }} </h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <span class="product-title text-start">{{ cart_item.product.brand }}</span>
-                <span class="product-title text-end m-3 mb-0 mt-0"><strong>Quantity:</strong> {{ cart_item.quantity }}</span>
-            </div>
-
-
-            {% if cart_item.product.old_price > cart_item.product.current_price %}
-              <h4 class="product-old-price">₹{{ cart_item.product.old_price }}</h4>
-            {% endif %}
-            <h4 class="product-price">₹{{ cart_item.product.current_price }}</h4>
-            <p class="card-rating"><strong>Rating:</strong> ⭐{{ cart_item.product.rating }}</p>
-            <p></p> <!-- Display quantity -->
-        </div>
-    </div>
-</div>
-{% endfor %}
-
 				</div>
 		</div>
 </section>
     
 {% endblock %}
 {% block scripts %}
-
+    <script>
+        function removeFromCart(productId) {
+            let quantity = document.getElementById(`quantity-${productId}`).value;
+            window.location.href = `/remove_from_cart/${productId}?quantity=` + quantity;
+        }
+    </script>
 {% endblock %}

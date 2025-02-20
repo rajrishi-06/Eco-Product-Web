@@ -25,14 +25,24 @@
                                 <span class="new">new</span>
                             {% endif %}
                             <ul>
-                                <li><a href="{{ url_for('cart_addition', product_id=wishlist_item.product.id )}}"><i class="fas fa-shopping-cart"></i></a></li>
-                                <li><a href="#"><i class="fas fa-heart"></i></a></li>
-                                <li><a href="#"><i class="fas fa-plus"></i></a></li>
-                                <li><a href="#"><i class="fas fa-expand"></i></a></li>
+                                <li>
+                                    <a href="#" onclick="addToCart({{ wishlist_item.product.id }})">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <label for="quantity-{{ wishlist_item.product.id }}"></label>
+                                    <select id="quantity-{{ wishlist_item.product.id }}" class="form-select">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </select>
+                                </li>
+                                <li><a href="{{ url_for('view_product', product_id=wishlist_item.product.id)}}"><i class="fas fa-expand"></i></a></li>
                             </ul>
                         </div>
                         <div class="part-2">
-
                               <h3 class="product-title text-start">{{ wishlist_item.product.sustainable_alternative }} </h3>
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                                 <span class="product-title text-start">{{ wishlist_item.product.brand }}</span>
@@ -42,17 +52,21 @@
                           {% endif %}
                             <h4 class="product-price">₹{{ wishlist_item.product.current_price }}</h4>
                             <p class="card-rating"><strong>Rating:</strong> ⭐{{ wishlist_item.product.rating }}</p>
-                            <p></p> <!-- Display quantity -->
+                            <a href="{{ url_for('wishlist_deletion', product_id=wishlist_item.product.id) }}" class="btn btn-danger"><i class="fas fa-trash-alt"></i></a>
                         </div>
                     </div>
                 </div>
             {% endfor %}
-
 				</div>
 		</div>
 </section>
     
 {% endblock %}
 {% block scripts %}
-
+  <script>
+    function addToCart(productId) {
+      let quantity = document.getElementById(`quantity-${productId}`).value;
+      window.location.href = `/add_to_cart/${productId}?quantity=` + quantity;
+    }
+  </script>
 {% endblock %}
