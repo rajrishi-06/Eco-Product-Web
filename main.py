@@ -1,15 +1,11 @@
-import random
-from builtins import float
-
-from flask import Flask, request, render_template, url_for, flash
+from flask import Flask, render_template, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, joinedload, QueryableAttribute, relationship
-from sqlalchemy import Integer, String, Text, Boolean, or_, ForeignKey, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float
 from flask_wtf import FlaskForm
 from werkzeug.utils import redirect
-from wtforms import StringField, TextAreaField, SubmitField, PasswordField, EmailField
-from wtforms.fields.simple import BooleanField
-from wtforms.validators import DataRequired, Email, Length, Regexp, ValidationError
+from wtforms import StringField, SubmitField, PasswordField, EmailField
+from wtforms.validators import DataRequired, Length, Regexp, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import current_user
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
@@ -116,10 +112,6 @@ def get_products_data():
     data = db.session.execute(db.select(EcoFriendlyProduct)).scalars().all()
     return data
 
-# Register the filter correctly
-@app.template_filter('random_number')
-def random_number_filter(start, end):
-    return random.randint(start, end)
 #################################
 #          FORMS
 #################################
