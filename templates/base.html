@@ -11,14 +11,38 @@
 
     {% block head %}
     {% endblock %}
-<!-- Add Bootstrap CSS -->
-<style>
-    .nav-link .fa-shopping-cart {
+    <style>
+        .nav-link .fa-shopping-cart {
         font-size: 1.5rem;
     }
     #cart-count {
         font-size: 0.75rem;
         padding: 0.4em 0.6em;
+    }
+    /* Adjust search bar height and responsiveness */
+    .search-form {
+        max-width: 250px;
+        width: 100%;
+    }
+
+    .search-form input {
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .search-form button {
+        height: 32px;
+        padding: 0 10px;
+    }
+
+    @media (max-width: 768px) {
+        .search-form {
+            max-width: 180px;
+        }
+
+        .search-form input {
+            font-size: 13px;
+        }
     }
 </style>
 </head>
@@ -30,12 +54,17 @@
             EcoShop <i class="fas fa-leaf"></i>
         </a>
 
-        <!-- Cart Icon (Always Visible) -->
+        <!-- Search Bar (Compact and Responsive) -->
+        <form method="GET" action="{{ url_for('home') }}" class="d-flex ms-auto me-3 search-form">
+            <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Search..." value="{{ search_query or '' }}">
+            <button type="submit" class="btn btn-light btn-sm"><i class="fas fa-search"></i></button>
+        </form>
+
         <div class="d-flex align-items-center">
-            <a class="nav-link position-relative me-3 d-lg-none" href="{{url_for('view_wishlist')}}">
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_wishlist') }}">
                 <i class="fas fa-heart fa-lg text-white"></i>
             </a>
-            <a class="nav-link position-relative me-3 d-lg-none" href="{{url_for('view_cart')}}">
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_cart') }}">
                 <i class="fas fa-shopping-cart fa-lg text-white"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     {{ cart_count }}
@@ -69,7 +98,7 @@
                     </a>
                 </li>
                 {% endif %}
-                <!-- Cart Icon and wishlist (Visible on Large Screens) -->
+                <!-- Wishlist and Cart Icons (Visible on Large Screens) -->
                 <li class="nav-item d-none d-lg-block">
                     <a class="nav-link position-relative" href="{{ url_for('view_wishlist') }}">
                         <i class="fas fa-heart fa-lg"></i>
