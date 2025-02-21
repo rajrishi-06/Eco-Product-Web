@@ -155,7 +155,8 @@
         <div class="buy-section">
             <p><strong>In Stock</strong></p>
                   <label for="quantity-{{ product.id }}"></label>
-                  <select id="quantity-{{ product.id }}" class="form-select">
+                  <!--suppress XmlDuplicatedId -->
+            <select id="quantity-{{ product.id }}" class="form-select">
                       <option value="1">1</option>
                       <option value="2">2</option>
                       <option value="3">3</option>
@@ -189,6 +190,7 @@
                                       </li>
                                       <li>
                                           <label for="quantity-{{ product.id }}"></label>
+                                          <!--suppress XmlDuplicatedId -->
                                           <select id="quantity-{{ product.id }}" class="form-select">
                                               <option value="1">1</option>
                                               <option value="2">2</option>
@@ -221,8 +223,6 @@
             </div>
         </div>
     </section>
-    </section>
-
 <!-- Review Section -->
 <section class="section-reviews" id="reviews">
     <h1 class="mx-5 my-3">Customer Reviews</h1>

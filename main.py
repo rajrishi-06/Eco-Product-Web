@@ -1,19 +1,19 @@
+import os
 from datetime import datetime
 
+from dotenv import load_dotenv
 from flask import Flask, render_template, url_for, flash
+from flask import request
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
+from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float, DateTime, or_
 from flask_wtf import FlaskForm
+from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float, DateTime
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length, Regexp, ValidationError
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import current_user
-from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
-from flask import request
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -133,7 +133,7 @@ def hash_password(password):
         salt_length=8
     )
     return hashed_pass
-def no_whitespace(form, field):
+def no_whitespace(field):
     if " " in field.data:
         raise ValidationError("No spaces allowed in the username.")
 
