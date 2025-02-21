@@ -34,24 +34,16 @@
         height: 32px;
         padding: 0 10px;
     }
+
     @media (max-width: 768px) {
         .search-form {
-            max-width: 100%;
-            width: 100%;
+            max-width: 180px;
         }
-
         .search-form input {
-            font-size: 14px;
-            padding: 5px;
+            font-size: 13px;
         }
-
-        .search-form button {
-            height: 32px;
-            padding: 0 8px;
-        }
-
-        .navbar .nav-link {
-            padding: 10px;
+        .search-form {
+            display: none;
         }
     }
     .navbar .nav-link:focus,
@@ -64,23 +56,29 @@
 </head>
 <body>
 <!-- Navbar -->
-<!-- Navbar -->
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="{{ url_for('home') }}">
             EcoShop <i class="fas fa-leaf"></i>
         </a>
 
-        <!-- Wishlist & Cart Icons (ALWAYS Visible) -->
-        <div class="d-flex align-items-center ms-auto">
-            <a class="nav-link position-relative me-3" href="{{ url_for('view_wishlist') }}">
+        <!-- Search Bar (Visible on Large Screens) -->
+        <form id="searchForm" method="GET" action="{{ url_for('home') }}" class="d-flex ms-auto me-3 search-form d-none d-lg-flex">
+            <input type="text" id="searchInput" name="search" class="form-control form-control-sm me-2"
+                   placeholder="Search..." value="{{ search_query or '' }}">
+            <button id="searchButton" type="submit" class="btn btn-light btn-sm">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+
+        <div class="d-flex align-items-center">
+            <!-- Wishlist & Cart Icons for Small Screens -->
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_wishlist') }}">
                 <i class="fas fa-heart fa-lg text-white"></i>
             </a>
-            <a class="nav-link position-relative me-3" href="{{ url_for('view_cart') }}">
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_cart') }}">
                 <i class="fas fa-shopping-cart fa-lg text-white"></i>
-                <span id="cart-count"
-                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     {{ get_cart_count() }}
                 </span>
             </a>
@@ -94,39 +92,41 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <!-- Search Bar (Visible in Collapsible Menu Only on Mobile) -->
+                <!-- Search Bar (Visible only in toggler menu on small screens) -->
                 <li class="nav-item d-lg-none">
-                    <form id="searchForm" method="GET" action="{{ url_for('home') }}" class="d-flex search-form w-100">
-                        <input type="text" id="searchInput" name="search" class="form-control form-control-sm me-2"
-                            placeholder="Search..." value="{{ search_query or '' }}">
-                        <button id="searchButton" type="submit" class="btn btn-light btn-sm">
+                    <form id="searchFormMobile" method="GET" action="{{ url_for('home') }}" class="d-flex my-2">
+                        <input type="text" id="searchInputMobile" name="search" class="form-control form-control-sm me-2"
+                               placeholder="Search..." value="{{ search_query or '' }}">
+                        <button id="searchButtonMobile" type="submit" class="btn btn-light btn-sm">
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
                 </li>
 
+                <!-- Home -->
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('home') }}">
                         <i class="fas fa-home"></i> Home
                     </a>
                 </li>
+
                 <!-- Categories Dropdown -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-th"></i> Categories
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
                         {% for category, products in categories_dict.items() %}
-                        <li>
-                            <a class="dropdown-item" href="#" onclick="searchCategory('{{ products|join(', ') }}')">
-                                {{ category }}
-                            </a>
-                        </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="searchCategory('{{ products|join(', ') }}')">
+                                    {{ category }}
+                                </a>
+                            </li>
                         {% endfor %}
                     </ul>
                 </li>
 
+                <!-- Login/Logout -->
                 {% if not current_user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('login') }}">
@@ -140,11 +140,25 @@
                     </a>
                 </li>
                 {% endif %}
+
+                <!-- Wishlist & Cart Icons for Large Screens -->
+                <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link position-relative" href="{{ url_for('view_wishlist') }}">
+                        <i class="fas fa-heart fa-lg"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link position-relative" href="{{ url_for('view_cart') }}">
+                        <i class="fas fa-shopping-cart fa-lg"></i>
+                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ get_cart_count() }}
+                        </span>
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
-
 
 
 
