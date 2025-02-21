@@ -44,6 +44,13 @@
             font-size: 13px;
         }
     }
+    .navbar .nav-link:focus,
+    .navbar .nav-link:active,
+    .navbar .dropdown-toggle:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -53,12 +60,12 @@
         <a class="navbar-brand" href="{{ url_for('home') }}">
             EcoShop <i class="fas fa-leaf"></i>
         </a>
-
-        <!-- Search Bar (Compact and Responsive) -->
-        <form method="GET" action="{{ url_for('home') }}" class="d-flex ms-auto me-3 search-form">
-            <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Search..." value="{{ search_query or '' }}">
-            <button type="submit" class="btn btn-light btn-sm"><i class="fas fa-search"></i></button>
-        </form>
+        <form id="searchForm" method="GET" action="{{ url_for('home') }}" class="d-flex ms-auto me-3 search-form">
+              <input type="text" id="searchInput" name="search" class="form-control form-control-sm me-2" placeholder="Search..." value="{{ search_query or '' }}">
+              <button id="searchButton" type="submit" class="btn btn-light btn-sm">
+                  <i class="fas fa-search"></i>
+              </button>
+          </form>
 
         <div class="d-flex align-items-center">
             <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_wishlist') }}">
@@ -67,7 +74,7 @@
             <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_cart') }}">
                 <i class="fas fa-shopping-cart fa-lg text-white"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {{ cart_count }}
+                    {{ get_cart_count() }}
                 </span>
             </a>
 
@@ -85,6 +92,24 @@
                         <i class="fas fa-home"></i> Home
                     </a>
                 </li>
+
+                <!-- Categories Dropdown (Visible in Toggler Menu) -->
+                <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-th"></i> Categories
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
+        {% for category, products in categories_dict.items() %}
+            <li>
+                <a class="dropdown-item" href="#" onclick="searchCategory('{{ products|join(', ') }}')">
+                    {{ category }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</li>
+
+
                 {% if not current_user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('login') }}">
@@ -98,6 +123,7 @@
                     </a>
                 </li>
                 {% endif %}
+
                 <!-- Wishlist and Cart Icons (Visible on Large Screens) -->
                 <li class="nav-item d-none d-lg-block">
                     <a class="nav-link position-relative" href="{{ url_for('view_wishlist') }}">
@@ -108,7 +134,7 @@
                     <a class="nav-link position-relative" href="{{ url_for('view_cart') }}">
                         <i class="fas fa-shopping-cart fa-lg"></i>
                         <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ cart_count }}
+                            {{ get_cart_count() }}
                         </span>
                     </a>
                 </li>
@@ -116,13 +142,29 @@
         </div>
     </div>
 </nav>
+
+
 <!------------------------------>
     <!-- Main Content -->
     {% block content %}
 
     {% endblock %}
+    <!-- Bootstrap JS (Include before closing </body>) -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+function searchCategory(products) {
+    let searchInput = document.getElementById("searchInput");
+    let searchForm = document.getElementById("searchForm");
+
+    // Populate the search input with product names
+    searchInput.value = products;
+
+    // Submit the search form
+    searchForm.submit();
+}
+</script>
+
     {% block scripts %}
     {% endblock %}
 </body>

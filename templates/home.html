@@ -19,12 +19,6 @@
 <header class="hero">
   <h2>Shop Eco-Friendly Products</h2>
   <p>Save the planet with sustainable choices!</p>
-  <!-- Search goes here  -->
-  <!-- Add this inside the header section before products list -->
-  <form method="GET" action="{{ url_for('home') }}" class="search-bar">
-    <input type="text" name="search" placeholder="Search for a product..." value="{{ search_query or '' }}">
-    <button type="submit"><i class="fas fa-search fa-lg"></i></button>
-  </form>
 </header>
 <section class="section-products">
   <div class="container">

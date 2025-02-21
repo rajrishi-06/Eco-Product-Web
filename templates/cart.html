@@ -56,12 +56,42 @@
                         </div>
                     </div>
                 {% endfor %}
+                <!-- Cart Summary Section -->
+                {% if cart_items %}
+                    <section class="cart-summary container mt-5">
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h3>Cart Summary</h3>
+                                <p><strong>Total Items:</strong> {{ cart_items | length }}</p>
+                                <p><strong>Total Cost:</strong> ₹<span id="total-cost">0</span></p>
+                                <button class="btn btn-success mt-3" onclick="buyAllItems()">Buy All</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <script>
+                        function calculateTotalCost() {
+                            let totalCost = 0;
+                            {% for cart_item in cart_items %}
+                                totalCost += {{ cart_item.product.current_price }} * {{ cart_item.quantity }};
+                            {% endfor %}
+                            document.getElementById("total-cost").innerText = totalCost;
+                        }
+
+                        function buyAllItems() {
+                            window.location.href = "/checkout";
+                        }
+
+                        window.onload = calculateTotalCost;
+                    </script>
+                {% endif %}
             {% else %}
             <div class="col-12 text-center">
                 <h3>No Products Added to Cart</h3>
                 <p>Try adding some products</p>
               </div>
             {% endif %}
+
 				</div>
 		</div>
 </section>

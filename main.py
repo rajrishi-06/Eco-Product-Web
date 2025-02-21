@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Flask, render_template, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float, DateTime
+from sqlalchemy import Integer, String, Text, Boolean, ForeignKey, Float, DateTime, or_
 from flask_wtf import FlaskForm
 from werkzeug.utils import redirect
 from wtforms import StringField, SubmitField, PasswordField, EmailField
@@ -16,6 +16,17 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+CATEGORIES_DICT={
+            "Personal Care": ["Bamboo Toothbrush", "Shampoo Bar", "Safety Razor"],
+            "Writing & Office Supplies": ["Recycled Paper Pens"],
+            "Reusable Bottles & Containers": ["Stainless Steel Bottle"],
+            "Household Essentials": ["Beeswax Wraps", "Compostable Trash Bags"],
+            "Clothing & Accessories": ["Organic Cotton T-Shirts", "Recycled Fabric Bags"],
+            "Cleaning & Laundry": ["Eco-Friendly Detergent", "Wool Dryer Balls"],
+            "Food & Kitchen": ["Reusable Coffee Filters", "Bamboo Cutlery Set"],
+            "Outdoor & Travel": ["Solar-Powered Charger", "Biodegradable Camping Soap"]
+        }
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -139,6 +150,13 @@ def get_cart_count():
     if current_user.is_authenticated:
         cart_count = db.session.query(db.func.sum(Cart.quantity)).filter(Cart.user_id == current_user.id).scalar() or 0
     return cart_count
+
+@app.context_processor
+def inject_categories():
+    return {
+        'get_cart_count': get_cart_count,  # Pass function reference
+        'categories_dict': CATEGORIES_DICT
+    }
 #################################
 #          FORMS
 #################################
@@ -182,7 +200,7 @@ def login():
             return redirect(url_for('home'))
         else:
             flash('Invalid Username or Email or password. Please try again.', 'danger')
-    return render_template('login.html', form=form, cart_count=get_cart_count())
+    return render_template('login.html', form=form)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -218,7 +236,7 @@ def register():
         login_user(new_user, remember=True)
         return redirect(url_for('home'))
 
-    return render_template("register.html", form=form, cart_count=get_cart_count())
+    return render_template("register.html", form=form)
 
 
 @app.route('/add_to_cart/<int:product_id>', methods=['GET','POST'])
@@ -343,13 +361,13 @@ def logout():
 @login_required
 def view_cart():
     cart_items = current_user.cart_items
-    return render_template("cart.html", cart_items=cart_items, cart_count=get_cart_count())
+    return render_template("cart.html", cart_items=cart_items)
 
 @app.route('/wishlist')
 @login_required
 def view_wishlist():
     wishlist_items = current_user.wish_items
-    return render_template("wishlist.html", wishlist_items=wishlist_items, cart_count=get_cart_count())
+    return render_template("wishlist.html", wishlist_items=wishlist_items)
 
 @app.route('/product/<int:product_id>')
 def view_product(product_id):
@@ -369,20 +387,26 @@ def view_product(product_id):
     return render_template(
         "product.html",
         product=product,
-        products_data=similar_products,  # Pass similar products
-        cart_count=get_cart_count(),
+        products_data=similar_products  # Pass similar product
     )
+
+from sqlalchemy import or_
 
 @app.route('/', methods=['GET'])
 def home():
-    search_query = request.args.get('search', '').strip()  # Get search query
-    page = request.args.get('page', 1, type=int)  # Get page number from URL, default to 1
-    per_page = 16  # Number of products per page
+    search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 16
 
     query = db.select(EcoFriendlyProduct)
 
     if search_query:
-        query = query.filter(EcoFriendlyProduct.traditional_product.ilike(f"%{search_query}%"))
+        search_terms = search_query.replace(',', ' ').split()  # Split by spaces & commas
+        query = query.where(
+            or_(
+                *[EcoFriendlyProduct.traditional_product.ilike(f"%{term}%") for term in search_terms]
+            )
+        )
 
     # Paginate results
     paginated_products = db.paginate(query, page=page, per_page=per_page, error_out=False)
@@ -390,10 +414,12 @@ def home():
     return render_template(
         'home.html',
         products_data=paginated_products.items,
-        cart_count=get_cart_count(),
         search_query=search_query,
         pagination=paginated_products
     )
+
+
+
 
 @app.route('/submit_review/<int:product_id>', methods=['POST'])
 @login_required
