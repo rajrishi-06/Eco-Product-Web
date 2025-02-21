@@ -184,28 +184,42 @@ def login():
             flash('Invalid Username or Email or password. Please try again.', 'danger')
     return render_template('login.html', form=form, cart_count=get_cart_count())
 
+
 @app.route('/register', methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
+
     form = RegisterForm()
+
     if request.method == "POST" and form.validate_on_submit():
         user_email = form.email.data.strip().lower()
+        user_name = form.name.data.strip()
+
+        # Check if email already exists
         if db.session.execute(db.select(User).where(User.email == user_email)).scalar_one_or_none():
             flash('Email already exists. Please log in.', 'warning')
             return redirect(url_for('login'))
 
+        # Check if name already exists
+        if db.session.execute(db.select(User).where(User.name == user_name)).scalar_one_or_none():
+            flash('Username already taken. Please log in or choose a different name.', 'warning')
+            return redirect(url_for('login'))
+
         hashed_and_salted_password = hash_password(form.password.data)
         new_user = User(
-            name=form.name.data,
-            email=user_email.lower(),
+            name=user_name,
+            email=user_email,
             password=hashed_and_salted_password
         )
         db.session.add(new_user)
         db.session.commit()
+
         login_user(new_user, remember=True)
         return redirect(url_for('home'))
+
     return render_template("register.html", form=form, cart_count=get_cart_count())
+
 
 @app.route('/add_to_cart/<int:product_id>', methods=['GET','POST'])
 @login_required
@@ -337,7 +351,6 @@ def view_wishlist():
     wishlist_items = current_user.wish_items
     return render_template("wishlist.html", wishlist_items=wishlist_items, cart_count=get_cart_count())
 
-
 @app.route('/product/<int:product_id>')
 def view_product(product_id):
     # Fetch the main product
@@ -412,4 +425,4 @@ def submit_review(product_id):
     return redirect(url_for('view_product', product_id=product_id))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
