@@ -25,7 +25,7 @@ CATEGORIES_DICT={
             "Clothing & Accessories": ["Organic Cotton T-Shirts", "Recycled Fabric Bags"],
             "Cleaning & Laundry": ["Eco-Friendly Detergent", "Wool Dryer Balls"],
             "Food & Kitchen": ["Reusable Coffee Filters", "Bamboo Cutlery Set"],
-            "Outdoor & Travel": ["Solar-Powered Charger", "Biodegradable Camping Soap"]
+            "Outdoor & Travel": ["Solar-Powred Charger", "Biodegradable Camping Soap"]
         }
 
 app = Flask(__name__)
