@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="../static/css/home.css">
 <script>
   window.onload = function() {
-    console.log("hello its working")
+<!--    console.log("hello its working")-->
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% for category, message in messages %}
         {% if category == "super_danger" %}
