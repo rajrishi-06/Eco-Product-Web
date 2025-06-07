@@ -116,7 +116,7 @@
     <div class="row">
         <!-- Left: Product Image (40%) -->
         <div class="product-image">
-            <img src="{{ product.img_url }}" alt="Product Image" class="img-fluid">
+            <img src=".{{ product.img_url }}" alt="Product Image" class="img-fluid">
         </div>
 
         <!-- Middle: Product Details + Description (40%) -->
@@ -176,7 +176,7 @@
                     {% for product in products_data %}
                         <div class="col-md-6 col-lg-4 col-xl-3">
                             <div id="product-{{ product.id }}" class="single-product">
-                                <div class="part-1" style="background: url('{{ product.img_url }}') no-repeat center !important; background-size: cover !important;">
+                                <div class="part-1" style="background: url('.{{ product.img_url }}') no-repeat center !important; background-size: cover !important;">
                                     {% if product.is_discounted %}
                                         <span class="discount">{{ (product.current_price - product.old_price) // 100 }}%</span>
                                     {% else %}

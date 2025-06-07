@@ -37,7 +37,7 @@ CATEGORIES_DICT={
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres.{os.getenv('SUPABASE_URL').replace('https://', '')}:{os.getenv('SUPABASE_DB_PASSWORD')}@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres:{os.getenv('SUPABASE_DB_PASSWORD')}@db.{os.getenv('SUPABASE_URL').replace('https://', '')}:5432/postgres"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 class Base(DeclarativeBase):
