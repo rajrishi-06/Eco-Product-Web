@@ -14,8 +14,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length, Regexp, ValidationError
+from supabase import create_client, Client
 
 load_dotenv()
+
+# Initialize Supabase client
+supabase: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_ANON_KEY")
+)
 
 CATEGORIES_DICT={
             "Personal Care": ["Bamboo Toothbrush", "Shampoo Bar", "Safety Razor"],
@@ -30,7 +37,7 @@ CATEGORIES_DICT={
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://postgres:{os.getenv('SUPABASE_DB_PASSWORD')}@db.{os.getenv('SUPABASE_URL').replace('https://', '')}:5432/postgres"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 class Base(DeclarativeBase):
