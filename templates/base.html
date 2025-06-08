@@ -58,7 +58,7 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('home') }}">
+        <a class="navbar-brand" href="{{ url_for('home') }}" aria-label="Redirects to Home.">
             EcoShop <i class="fas fa-leaf"></i>
         </a>
 
@@ -73,10 +73,10 @@
 
         <div class="d-flex align-items-center">
             <!-- Wishlist & Cart Icons for Small Screens -->
-            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_wishlist') }}">
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_wishlist') }}" aria-label="Opens Wishlist">
                 <i class="fas fa-heart fa-lg text-white"></i>
             </a>
-            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_cart') }}">
+            <a class="nav-link position-relative me-3 d-lg-none" href="{{ url_for('view_cart') }}" aria-label="Opens Cart items">
                 <i class="fas fa-shopping-cart fa-lg text-white"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     {{ get_cart_count() }}
@@ -105,7 +105,7 @@
 
                 <!-- Home -->
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}">
+                    <a class="nav-link" href="{{ url_for('home') }}" aria-label="Redirects to Home">
                         <i class="fas fa-home"></i> Home
                     </a>
                 </li>
@@ -129,13 +129,13 @@
                 <!-- Login/Logout -->
                 {% if not current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('login') }}">
+                    <a class="nav-link" href="{{ url_for('login') }}" aria-label="Opens Login Page">
                         <i class="fas fa-user"></i> Login
                     </a>
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">
+                    <a class="nav-link" href="{{ url_for('logout') }}" aria-label="Logs user Out">
                         <i class="fas fa-user"></i> Logout
                     </a>
                 </li>
@@ -143,12 +143,12 @@
 
                 <!-- Wishlist & Cart Icons for Large Screens -->
                 <li class="nav-item d-none d-lg-block">
-                    <a class="nav-link position-relative" href="{{ url_for('view_wishlist') }}">
+                    <a class="nav-link position-relative" href="{{ url_for('view_wishlist') }}" aria-label="Opens Wishlist">
                         <i class="fas fa-heart fa-lg"></i>
                     </a>
                 </li>
                 <li class="nav-item d-none d-lg-block">
-                    <a class="nav-link position-relative" href="{{ url_for('view_cart') }}">
+                    <a class="nav-link position-relative" href="{{ url_for('view_cart') }}" aria-label="Opens Cart Items">
                         <i class="fas fa-shopping-cart fa-lg"></i>
                         <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             {{ get_cart_count() }}

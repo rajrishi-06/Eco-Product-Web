@@ -376,6 +376,10 @@ def view_wishlist():
     wishlist_items = current_user.wish_items
     return render_template("wishlist.html", wishlist_items=wishlist_items)
 
+@app.route("/ping")
+def ping():
+    return render_template("ping.html")
+
 @app.route('/product/<int:product_id>')
 def view_product(product_id):
     # Fetch the main product
